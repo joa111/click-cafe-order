@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
-import { ArrowLeft } from "lucide-react";
+import React, { useState, useEffect, useRef } from "react";
+// import axios from "axios"; // Remove this
+import { ArrowLeft, Search } from "lucide-react";
 import { Link } from "react-router-dom";
+import { getOrderTypes, addOrder } from "../services/firestoreService";
 
 const AddOrderForm = ({ onOrderAdded = () => {} }) => {
   const [formData, setFormData] = useState({
@@ -17,7 +18,12 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
 
   const [orderTypes, setOrderTypes] = useState([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const apiUrl = process.env.REACT_APP_API_URL;
+  const [showDropdown, setShowDropdown] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const dropdownRef = useRef(null);
+  // Remove apiUrl as we're using Firebase directly
+  // const apiUrl = process.env.REACT_APP_API_URL;
+
   const handleChange = (e) => {
     const { name, value, type, checked } = e.target;
     setFormData({
@@ -26,28 +32,44 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
     });
   };
 
-    // Fetch order types on component mount
-    useEffect(() => {
-        const fetchOrderTypes = async () => {
-          try {
-            const response = await axios.get(`${apiUrl}/order-types`);
-            setOrderTypes(response.data);
-          } catch (error) {
-            console.error("Failed to fetch order types", error);
-            setOrderTypes(["Other"]); // Fallback
-          }
-        };
-    
-        fetchOrderTypes();
-      }, []);
+  useEffect(() => {
+    const fetchOrderTypes = async () => {
+      try {
+        const types = await getOrderTypes();
+        // Extract names from the returned objects
+        const typeNames = types.map(type => type.name);
+        setOrderTypes(typeNames);
+      } catch (error) {
+        console.error("Failed to fetch order types", error);
+        setOrderTypes(["Other"]);
+      }
+    };
+
+    fetchOrderTypes();
+  }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setShowDropdown(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const filteredOrderTypes = orderTypes.filter((type) =>
+    type.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
-    console.log("Submitting form data:", formData);
     try {
-      const response = await axios.post(`${apiUrl}/orders`,formData);
-      console.log("Order and invoice successfully created:", response.data);
+      const response = await addOrder(formData);
+      console.log("Order created:", response);
       onOrderAdded();
       setFormData({
         order_type: "",
@@ -60,15 +82,12 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
         notes: "",
       });
     } catch (error) {
-      console.error(
-        "Error while creating order:",
-        error.response?.data || error.message
-      );
+      console.error("Error:", error.message);
     } finally {
       setIsSubmitting(false);
     }
   };
-  
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 to-purple-50 p-4">
       <div className="w-full max-w-3xl bg-white rounded-3xl shadow-xl overflow-hidden">
@@ -80,37 +99,50 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
         </div>
 
         <form onSubmit={handleSubmit} className="p-8 space-y-6">
-          {/* Order Type */}
-          <div>
+          {/* Custom Order Type Autocomplete */}
+          <div className="relative" ref={dropdownRef}>
             <label className="block text-gray-700 font-medium mb-2">
-              Order Type
+              Select Order Type
             </label>
-            <div className="grid grid-cols-3 gap-4">
-              {orderTypes.map((type) => (
-                <label
-                key={type}
-                className={`cursor-pointer border rounded-lg p-4 text-center text-sm font-medium transition-all
-                ${
-                  formData.order_type === type
-                    ? "bg-indigo-100 border-indigo-500 text-indigo-700"
-                    : "bg-white border-gray-300 hover:bg-gray-50 hover:border-indigo-300"
-                }`}
-              >
-                  <input
-                    type="radio"
-                    name="order_type"
-                    value={type}
-                    checked={formData.order_type === type}
-                    onChange={handleChange}
-                    className="hidden"
-                  />
-                  {type}
-                </label>
-              ))}
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => {
+                  setSearchQuery(e.target.value);
+                  setShowDropdown(true);
+                }}
+                onFocus={() => setShowDropdown(true)}
+                placeholder="Search order type..."
+                className="w-full px-4 py-2 pr-10 border rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:outline-none"
+              />
+              <Search className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
             </div>
+            
+            {showDropdown && (
+              <div className="absolute z-10 w-full mt-1 bg-white shadow-lg rounded-lg border max-h-60 overflow-auto">
+                {filteredOrderTypes.length > 0 ? (
+                  filteredOrderTypes.map((type) => (
+                    <div
+                      key={type}
+                      className="px-4 py-2 hover:bg-indigo-50 cursor-pointer"
+                      onClick={() => {
+                        setFormData((prev) => ({ ...prev, order_type: type }));
+                        setSearchQuery(type);
+                        setShowDropdown(false);
+                      }}
+                    >
+                      {type}
+                    </div>
+                  ))
+                ) : (
+                  <div className="px-4 py-2 text-gray-500">No results found</div>
+                )}
+              </div>
+            )}
           </div>
 
-          {/* Deadline and Payment Details */}
+          {/* Rest of the form remains the same */}
           <div className="grid grid-cols-2 gap-6">
             <div>
               <label className="block text-gray-700 font-medium mb-2">
@@ -175,7 +207,6 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
             )}
           </div>
 
-          {/* Client Information */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
               Client Name
@@ -205,7 +236,6 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
             />
           </div>
 
-          {/* Notes */}
           <div>
             <label className="block text-gray-700 font-medium mb-2">
               Additional Notes
@@ -220,7 +250,6 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
             ></textarea>
           </div>
 
-          {/* Submit Button */}
           <button
             type="submit"
             disabled={isSubmitting}
@@ -234,10 +263,10 @@ const AddOrderForm = ({ onOrderAdded = () => {} }) => {
           </button>
         </form>
         <Link 
-        to="/" 
-        className="absolute top-4 left-4 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors"
+          to="/" 
+          className="absolute top-4 left-4 bg-gray-100 hover:bg-gray-200 p-2 rounded-full transition-colors"
         >
-        <ArrowLeft size={24} className="text-gray-600" />
+          <ArrowLeft size={24} className="text-gray-600" />
         </Link>
       </div>
     </div>

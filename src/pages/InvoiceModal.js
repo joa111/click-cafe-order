@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { getInvoiceByOrderId } from '../services/firestoreService';
 
 const InvoiceModal = ({ orderId, onClose }) => {
   const [invoice, setInvoice] = useState(null);
@@ -11,8 +11,8 @@ const InvoiceModal = ({ orderId, onClose }) => {
   useEffect(() => {
     const fetchInvoice = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/invoices/${orderId}`);
-        setInvoice(response.data);
+        const invoiceData = await getInvoiceByOrderId(orderId);
+        setInvoice(invoiceData);
       } catch (error) {
         console.error('Failed to fetch invoice', error);
       } finally {
@@ -73,7 +73,7 @@ const InvoiceModal = ({ orderId, onClose }) => {
 
         {/* Invoice Header */}
         <div className="text-center">
-          <h2 className="text-3xl font-bold text-gray-800">Dalys Digital</h2>
+          <h2 className="text-3xl font-bold text-gray-800"><strong>Dalys Digital</strong></h2>
           <h3 className="text-2xl mb-4">Invoice</h3>
           <p className="text-sm text-gray-500">
             <strong>Invoice Number:</strong> {invoice.invoice_number}
