@@ -3,7 +3,6 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
   X,
-  Trash2,
   Receipt,
   Pencil,
   LogOut
@@ -11,9 +10,6 @@ import {
 import { useAuth } from "../App";
 import {
   getOrders,
-  getMenuItems,
-  addMenuItem,
-  deleteMenuItem,
   updateOrderPaymentStatus
 } from "../services/supabaseService";
 
@@ -63,85 +59,11 @@ const ConfirmPaymentModal = ({ onConfirm, onCancel, orderDetails }) => {
   );
 };
 
-// Menu Management Modal
-const MenuManagementModal = ({
-  menuItems,
-  onAddStep,
-  onDeleteStep,
-  onClose,
-}) => {
-  const [newItemName, setNewItemName] = useState("");
-  const [newItemPrice, setNewItemPrice] = useState("");
 
-  const handleAdd = () => {
-    if (newItemName.trim() && newItemPrice) {
-      onAddStep(newItemName.trim(), parseFloat(newItemPrice));
-      setNewItemName("");
-      setNewItemPrice("");
-    }
-  };
-
-  return (
-    <div className="fixed inset-0 bg-brand-black/20 flex items-center justify-center z-50 p-4 backdrop-blur-sm">
-      <div className="bg-white border border-gray-200 shadow-xl w-full max-w-md p-6">
-        <div className="flex justify-between items-center mb-6 border-b border-gray-100 pb-2">
-          <h2 className="text-xl font-bold font-display uppercase tracking-wide text-brand-black">Manage Menu</h2>
-          <button onClick={onClose}><X size={20} className="text-gray-400 hover:text-black" /></button>
-        </div>
-
-        {/* Add New Item */}
-        <div className="flex gap-2 mb-6">
-          <input
-            type="text"
-            value={newItemName}
-            onChange={(e) => setNewItemName(e.target.value)}
-            placeholder="ITEM NAME"
-            className="flex-grow px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white uppercase text-sm"
-          />
-          <input
-            type="number"
-            value={newItemPrice}
-            onChange={(e) => setNewItemPrice(e.target.value)}
-            placeholder="PRICE"
-            className="w-24 px-3 py-2 border border-gray-300 focus:outline-none focus:ring-1 focus:ring-black focus:border-black bg-white uppercase text-sm font-mono"
-          />
-          <button
-            onClick={handleAdd}
-            className="bg-black text-white px-4 py-2 hover:bg-gray-900 transition-colors uppercase text-xs font-bold tracking-wider"
-          >
-            Add
-          </button>
-        </div>
-
-        {/* Existing Items List */}
-        <div className="max-h-96 overflow-y-auto pr-2">
-          {menuItems.map((item) => (
-            <div
-              key={item.id}
-              className="flex justify-between items-center bg-gray-50 px-3 py-2 border border-gray-100 mb-2"
-            >
-              <div>
-                <span className="font-bold text-sm text-gray-800 uppercase block">{item.name}</span>
-                <span className="font-mono text-xs text-gray-500">₹{item.price}</span>
-              </div>
-              <button
-                onClick={() => onDeleteStep(item.id)}
-                className="text-gray-400 hover:text-red-600 transition-colors"
-              >
-                <Trash2 size={14} />
-              </button>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  );
-};
 
 const OrderList = () => {
   // State Management
   const [orders, setOrders] = useState([]);
-  const [menuItems, setMenuItems] = useState([]);
   const [loading, setLoading] = useState(true);
 
   // Tab State: 'ongoing' or 'completed'
@@ -150,7 +72,7 @@ const OrderList = () => {
   // Date Filter: 'today', 'yesterday', 'week', 'month', 'all'
   const [dateFilter, setDateFilter] = useState("today");
 
-  const [showMenuModal, setShowMenuModal] = useState(false);
+
   const [showExportModal, setShowExportModal] = useState(false);
   const [confirmPaymentOrder, setConfirmPaymentOrder] = useState(null);
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState(null);
@@ -175,35 +97,7 @@ const OrderList = () => {
     setTimeout(() => setNotification(null), 3000);
   };
 
-  useEffect(() => {
-    const fetchItems = async () => {
-      try {
-        const items = await getMenuItems();
-        setMenuItems(items);
-      } catch (err) {
-        console.error("Failed to fetch menu items", err);
-      }
-    };
-    fetchItems();
-  }, []);
 
-  const handleAddMenuItem = async (name, price) => {
-    try {
-      const newItem = await addMenuItem(name, price);
-      setMenuItems((prev) => [...prev, newItem].sort((a, b) => a.name.localeCompare(b.name)));
-    } catch (err) {
-      console.error("Failed to add menu item", err);
-    }
-  };
-
-  const handleDeleteMenuItem = async (id) => {
-    try {
-      await deleteMenuItem(id);
-      setMenuItems((prev) => prev.filter((item) => item.id !== id));
-    } catch (err) {
-      console.error("Failed to delete menu item", err);
-    }
-  };
 
   useEffect(() => {
     const fetchOrders = async () => {
@@ -407,14 +301,7 @@ const OrderList = () => {
       )}
 
       {/* Modals */}
-      {showMenuModal && (
-        <MenuManagementModal
-          menuItems={menuItems}
-          onAddStep={handleAddMenuItem}
-          onDeleteStep={handleDeleteMenuItem}
-          onClose={() => setShowMenuModal(false)}
-        />
-      )}
+
 
       {confirmPaymentOrder && (
         <ConfirmPaymentModal
@@ -474,12 +361,11 @@ const OrderList = () => {
             >
               Export Data
             </button>
-            <button
-              onClick={() => setShowMenuModal(true)}
-              className="flex-1 md:flex-none border border-black text-black px-6 py-3 font-bold uppercase tracking-wider text-xs hover:bg-gray-50 transition-colors"
-            >
-              Manage Menu
-            </button>
+            <Link to="/menu" className="flex-1 md:flex-none">
+              <button className="w-full h-full border border-black text-black px-6 py-3 font-bold uppercase tracking-wider text-xs hover:bg-gray-50 transition-colors">
+                Manage Menu
+              </button>
+            </Link>
             <Link to="/add-order" className="flex-1 md:flex-none">
               <button className="w-full bg-brand-red text-white px-6 py-3 font-bold uppercase tracking-wider text-xs hover:bg-red-700 transition-colors shadow-sm">
                 New Order
@@ -698,14 +584,7 @@ const OrderList = () => {
         )}
       </div>
 
-      {showMenuModal && (
-        <MenuManagementModal
-          menuItems={menuItems}
-          onAddStep={handleAddMenuItem}
-          onDeleteStep={handleDeleteMenuItem}
-          onClose={() => setShowMenuModal(false)}
-        />
-      )}
+
 
       {selectedOrderForInvoice && (
         <InvoiceModal

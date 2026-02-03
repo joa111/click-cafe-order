@@ -235,17 +235,28 @@ const AddOrderForm = ({ onOrderAdded = () => { } }) => {
 
               {showDropdown && filteredItems.length > 0 && (
                 <div className="absolute z-10 w-full mt-1 bg-white border border-gray-200 shadow-xl max-h-60 overflow-auto">
-                  {filteredItems.map((item) => (
-                    <div
-                      key={item.id}
-                      className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex justify-between items-center border-b border-gray-50 last:border-0"
-                      onClick={() => addItemToCart(item)}
-                    >
-                      <div>
-                        <div className="text-sm uppercase font-bold text-gray-800">{item.name}</div>
-                        <div className="text-[10px] text-gray-400 uppercase">{item.category}</div>
+                  {Object.entries(filteredItems.reduce((acc, item) => {
+                    const cat = item.category || 'General';
+                    if (!acc[cat]) acc[cat] = [];
+                    acc[cat].push(item);
+                    return acc;
+                  }, {})).sort().map(([category, items]) => (
+                    <div key={category}>
+                      <div className="px-4 py-2 bg-gray-100 text-xs font-bold uppercase tracking-wider text-gray-500 sticky top-0">
+                        {category}
                       </div>
-                      <div className="font-mono font-bold text-sm">₹{item.price}</div>
+                      {items.map((item) => (
+                        <div
+                          key={item.id}
+                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer flex justify-between items-center border-b border-gray-50 last:border-0"
+                          onClick={() => addItemToCart(item)}
+                        >
+                          <div>
+                            <div className="text-sm uppercase font-bold text-gray-800">{item.name}</div>
+                          </div>
+                          <div className="font-mono font-bold text-sm">₹{item.price}</div>
+                        </div>
+                      ))}
                     </div>
                   ))}
                   {filteredItems.length === 0 && (

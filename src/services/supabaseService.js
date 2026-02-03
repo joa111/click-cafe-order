@@ -31,6 +31,17 @@ export const deleteMenuItem = async (id) => {
     if (error) throw error;
 };
 
+export const updateMenuItem = async (id, name, price, category) => {
+    const { data, error } = await supabase
+        .from('menu_items')
+        .update({ name, price, category })
+        .eq('id', id)
+        .select();
+
+    if (error) throw error;
+    return data[0];
+};
+
 // Orders
 export const getOrders = async () => {
     // Fetch orders with their items

@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { supabase } from './supabase';
 import OrderList from './pages/OrderList';
 import AddOrder from './pages/AddOrder';
+import MenuManagement from './pages/MenuManagement';
 import Login from './pages/Login';
 
 // Create auth context
@@ -82,6 +83,14 @@ const App = () => {
             element={
               <ProtectedRoute>
                 <OrderList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/menu"
+            element={
+              <ProtectedRoute>
+                <MenuManagement />
               </ProtectedRoute>
             }
           />
