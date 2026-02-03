@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Search, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, Search, Trash2 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { getMenuItems, addOrder, getOrderById, updateOrder } from "../services/supabaseService";
 
