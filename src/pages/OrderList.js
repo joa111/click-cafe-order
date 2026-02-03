@@ -15,7 +15,7 @@ import {
   deleteMenuItem,
   updateOrderPaymentStatus
 } from "../services/supabaseService";
-import { useAuth } from "../App";
+
 import InvoiceModal from "./InvoiceModal";
 import ExportModal from "../components/ExportModal";
 
