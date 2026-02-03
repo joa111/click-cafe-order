@@ -2,9 +2,7 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
-  Filter,
-  ArrowUp,
-  ArrowDown,
+
   X,
   Trash2,
   Receipt,
@@ -158,7 +156,7 @@ const OrderList = () => {
   const [notification, setNotification] = useState(null);
 
   const navigate = useNavigate();
-  const { } = useAuth();
+
 
   // Show notification helper
   const showNotification = (message, type = "success") => {

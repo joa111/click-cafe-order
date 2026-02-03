@@ -43,7 +43,6 @@ const InvoiceModal = ({ orderId, onClose }) => {
       const imgData = canvas.toDataURL('image/png');
       const pdf = new jsPDF('p', 'mm', 'a4');
       const imgWidth = 210;
-      const pageHeight = 297;
       const imgHeight = (canvas.height * imgWidth) / canvas.width;
 
       pdf.addImage(imgData, 'PNG', 0, 0, imgWidth, imgHeight);
@@ -86,7 +85,6 @@ const InvoiceModal = ({ orderId, onClose }) => {
         await navigator.share({
           files: [file],
           title: `Invoice #${invoice.invoice_number}`,
-          text: `Here is the invoice for ${invoice.order.client_name}.`,
           text: `Here is the invoice for ${invoice.order.client_name}.`,
         });
         return; // Success
