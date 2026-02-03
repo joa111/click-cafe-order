@@ -2,12 +2,13 @@ import React, { useEffect, useState, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Search,
-
   X,
   Trash2,
   Receipt,
-  Pencil
+  Pencil,
+  LogOut
 } from "lucide-react";
+import { useAuth } from "../App";
 import {
   getOrders,
   getMenuItems,
@@ -155,7 +156,17 @@ const OrderList = () => {
   const [selectedOrderForInvoice, setSelectedOrderForInvoice] = useState(null);
   const [notification, setNotification] = useState(null);
 
+  const { logout } = useAuth();
   const navigate = useNavigate();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      navigate('/login');
+    } catch (error) {
+      console.error("Failed to log out", error);
+    }
+  };
 
 
   // Show notification helper
@@ -430,16 +441,32 @@ const OrderList = () => {
       <div className="container mx-auto max-w-7xl">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 no-print">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-black font-display text-brand-black uppercase tracking-tighter">
-              Click Cafe<span className="text-brand-red text-6xl leading-none">.</span>
-            </h1>
-            <p className="text-gray-500 uppercase tracking-widest text-xs mt-1 font-bold">
-              Daily Kitchen Tracker
-            </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black font-display text-brand-black uppercase tracking-tighter">
+                Click Cafe<span className="text-brand-red text-6xl leading-none">.</span>
+              </h1>
+              <p className="text-gray-500 uppercase tracking-widest text-xs mt-1 font-bold">
+                Daily Kitchen Tracker
+              </p>
+            </div>
+            <button
+              onClick={handleLogout}
+              className="md:hidden text-gray-400 hover:text-black transition-colors"
+              title="Sign Out"
+            >
+              <LogOut size={24} />
+            </button>
           </div>
 
           <div className="flex flex-row gap-3 w-full md:w-auto">
+            <button
+              onClick={handleLogout}
+              className="hidden md:flex bg-gray-100 items-center justify-center border border-transparent text-gray-600 px-4 py-3 font-bold uppercase tracking-wider text-xs hover:bg-gray-200 transition-colors"
+              title="Sign Out"
+            >
+              <LogOut size={16} />
+            </button>
             <button
               onClick={() => setShowExportModal(true)}
               className="flex-1 md:flex-none bg-white border border-gray-300 text-gray-700 px-6 py-3 font-bold uppercase tracking-wider text-xs hover:bg-gray-50 transition-colors shadow-sm"
